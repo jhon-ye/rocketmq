@@ -38,6 +38,17 @@ import org.apache.rocketmq.remoting.netty.NettyServerConfig;
 import org.apache.rocketmq.remoting.netty.TlsSystemConfig;
 import org.apache.rocketmq.srvutil.FileWatchService;
 
+/*
+* Netty 线程模型 EventLoopGroup  EventExecutorGroup
+* EventExecutor 执行者， 真正的线程对象（线程池）
+* EventLoop 线程模型
+*
+* Netty 设计原则
+* 在整个Channel 生命周期中， ChannelHandler 的执行总是一个相同的线程（EventLoop、SingleThreadEventExecutor）
+* Channel 在调用注册到Selector 上时会绑定一个EventLoop,默认所有的ChannelHandler的执行都在该线程上，
+*
+* */
+
 
 //NameServer的核心控制类
 public class NamesrvController {
@@ -55,12 +66,15 @@ public class NamesrvController {
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl(
         "NSScheduledThread"));
 
-//    
+//    读取或变更NameServer的配置属性,加载NamesrvConfig中配置的配置文件到内存
     private final KVConfigManager kvConfigManager;
+//    NameServer数据的载体，记录Broker,Topic等信息
     private final RouteInfoManager routeInfoManager;
+
 
     private RemotingServer remotingServer;
 
+//    通道在发送异常时的回调方法（Nameserver与Broker的连接通道在关闭、通道发送异常、通道空闲时
     private BrokerHousekeepingService brokerHousekeepingService;
 
     private ExecutorService remotingExecutor;
@@ -88,7 +102,8 @@ public class NamesrvController {
 
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
 
-        // netty 执行线程; 线程数8
+        // netty 执行线程; 线程数8(默认线程池)
+//        该参数目前主要用于NameServer的默认业务线程池，处理诸如broker,product,consume与NameServer的所有交互命令。
         this.remotingExecutor =
             Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
 

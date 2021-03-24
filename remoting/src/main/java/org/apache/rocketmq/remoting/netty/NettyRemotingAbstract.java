@@ -114,6 +114,8 @@ public abstract class NettyRemotingAbstract {
      * @param permitsAsync Number of permits for asynchronous requests.
      */
     public NettyRemotingAbstract(final int permitsOneway, final int permitsAsync) {
+//        oneway:只负责发送消息， 不等待服务器回应且没有回调函数触发即只发送请求不等待回应，此方式发送消息的过程耗时非常短，一般在微妙级别；
+//        如日志收集
         this.semaphoreOneway = new Semaphore(permitsOneway, true);
         this.semaphoreAsync = new Semaphore(permitsAsync, true);
     }
