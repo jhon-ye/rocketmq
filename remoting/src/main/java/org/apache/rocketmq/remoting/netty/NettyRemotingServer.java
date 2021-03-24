@@ -95,6 +95,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
 
     public NettyRemotingServer(final NettyServerConfig nettyServerConfig,
         final ChannelEventListener channelEventListener) {
+        // 初始化信号量 semaphoreOneway、semaphoreAsync 控制并发数
         super(nettyServerConfig.getServerOnewaySemaphoreValue(), nettyServerConfig.getServerAsyncSemaphoreValue());
         this.serverBootstrap = new ServerBootstrap();
         this.nettyServerConfig = nettyServerConfig;

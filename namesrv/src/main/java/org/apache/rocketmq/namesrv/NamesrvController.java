@@ -39,15 +39,23 @@ import org.apache.rocketmq.remoting.netty.TlsSystemConfig;
 import org.apache.rocketmq.srvutil.FileWatchService;
 
 
+//NameServer的核心控制类
 public class NamesrvController {
     private static final InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
 
+//    主要指定nameserver的相关配置目录属性
     private final NamesrvConfig namesrvConfig;
 
     private final NettyServerConfig nettyServerConfig;
 
+
+//    NameServer 定时任务执行线程池，一个线程，默认定时执行两个任务
+//   1.每隔10s扫描broker,维护当前存活的Broker信息
+//   2.每隔10s打印KVConfig信息
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl(
         "NSScheduledThread"));
+
+//    
     private final KVConfigManager kvConfigManager;
     private final RouteInfoManager routeInfoManager;
 
@@ -75,13 +83,19 @@ public class NamesrvController {
 
     public boolean initialize() {
 
+        // 持久化文件中加载配置到内存中
         this.kvConfigManager.load();
 
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
 
+        // netty 执行线程; 线程数8
         this.remotingExecutor =
             Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
 
+        /**
+         *  注册处理器
+         * {@link DefaultRequestProcessor}
+         * */
         this.registerProcessor();
 
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
